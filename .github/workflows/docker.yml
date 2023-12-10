@@ -1,0 +1,30 @@
+name: Publish autoremove-torrents to DockerHub
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Image Version"
+        required: true
+        default: 1.0.0
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Set ENV
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          echo "RELEASE_VERSION_ALL=${VERSION}" >> $GITHUB_ENV
+          echo "RELEASE_VERSION_MAIN=${VERSION:0:1}" >> $GITHUB_ENV
+          echo "RELEASE_VERSION_SUB=${VERSION:0:3}" >> $GITHUB_ENV
+          echo "${{ env.RELEASE_VERSION_ALL }}"
+          echo "${{ env.RELEASE_VERSION_SUB }}"
+          echo "${{ env.RELEASE_VERSION_MAIN }}"
+      - name: Publish to Registry
+        uses: elgohr/Publish-Docker-Github-Action@master
+        with:
+          name: ${{ secrets.DOCKER_NAME }}/autoremove-torrents
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          tags: "latest,${{ env.RELEASE_VERSION_ALL }},${{ env.RELEASE_VERSION_SUB }},${{ env.RELEASE_VERSION_MAIN }}"
+          dockerfile: Dockerfile
